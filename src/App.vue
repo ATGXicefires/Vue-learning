@@ -1,17 +1,25 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import TodoItem from './components/TodoItem.vue'
 
-let nextTodoId = 5 // 下一個待辦事項的 ID
+let nextTodoId = 11 // 下一個待辦事項的 ID
 //學列表
 const todos = ref([
   { id: 1, text: '學習 Vue 的基礎知識', completed: false },
-  { id: 2, text: '學習組件化開發', completed: false },
-  { id: 3, text: '學習列表渲染 v-for', completed: false },
-  { id: 4, text: '接下來要學習條件渲染 v-if', completed: false },
+  { id: 2, text: '響應式資料 (ref)', completed: false },
+  { id: 3, text: '雙向綁定 (v-model 和 .lazy 修飾符)', completed: false },
+  { id: 4, text: '組件化開發 (.vue 單一檔案組件)', completed: false },
+  { id: 5, text: '父子組件通訊 (props 向下傳遞, emits 向上通知)', completed: false },
+  { id: 6, text: '列表渲染 (v-for 和 :key)', completed: false },
+  { id: 7, text: '條件渲染 (v-if, v-else)', completed: false },
+  { id: 8, text: '動態樣式綁定 (:class)', completed: false },
+  { id: 9, text: '事件處理 (@click, @submit.prevent)', completed: false },
+  { id: 10, text: '計算屬性 (computed)', completed: false },
 ])
 
 const newTodoText = ref('')
+
+const visibility = ref('all') // 可選值：'all', 'active', 'completed'
 
 function addTodo() {
   if (newTodoText.value.trim() === '') return
@@ -33,28 +41,47 @@ function handleToggleComplete(id) {
 function deleteTodo(id) {
   todos.value = todos.value.filter((todo) => todo.id !== id)
 }
+
+const filteredTodos = computed(() => {
+  switch (visibility.value) {
+    case 'active':
+      return todos.value.filter((todo) => !todo.completed)
+    case 'completed':
+      return todos.value.filter((todo) => todo.completed)
+    default:
+      return todos.value // 'all' 或其他情況，返回所有待辦事項
+  }
+})
 </script>
 
 <template>
   <div class="todo-list">
     <h1>我的待辦事項</h1>
     <div class="add-todo-section">
-      <form @submit.prevent="addTodo">
+      <form class="add-form" @submit.prevent="addTodo">
         <input v-model.lazy="newTodoText" type="text" placeholder="新增待辦事項" required />
         <button type="submit">新增</button>
       </form>
-      <!-- v-if 現在會被正確地推到表單的下一行 -->
-      <p v-if="todos.length === 0">目前沒有待辦事項</p>
     </div>
-    <ul>
+    <div class="filter-controls">
+      <button @click="visibility = 'all'" :class="{ active: visibility === 'all' }">全部</button>
+      <button @click="visibility = 'active'" :class="{ active: visibility === 'active' }">
+        未完成
+      </button>
+      <button @click="visibility = 'completed'" :class="{ active: visibility === 'completed' }">
+        已完成
+      </button>
+    </div>
+    <ul v-if="filteredTodos.length > 0" class="todo-list">
       <TodoItem
-        v-for="todo in todos"
+        v-for="todo in filteredTodos"
         :key="todo.id"
         :todo="todo"
         @toggle-complete="handleToggleComplete"
         @delete-todo="deleteTodo"
       />
     </ul>
+    <p v-else class="todos.length === 0">目前沒有待辦事項</p>
   </div>
 </template>
 
@@ -62,6 +89,17 @@ function deleteTodo(id) {
 h1 {
   text-align: center;
   color: #42b883;
+  margin-bottom: 1.5rem;
+}
+p {
+  text-align: center;
+  color: #555;
+  margin-bottom: 1.5rem;
+}
+.add-form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin-bottom: 1.5rem;
 }
 .add-todo-section {
@@ -103,5 +141,32 @@ h1 {
   text-align: center;
   color: #777;
   margin-top: 2rem;
+}
+.filter-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px; /* 按鈕之間的間距 */
+  margin-bottom: 1.5rem;
+}
+
+.filter-controls button {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background-color: white;
+  color: #555;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.filter-controls button:hover {
+  background-color: #f2f2f2;
+}
+
+/* 當按鈕處於 active 狀態時的樣式 */
+.filter-controls button.active {
+  background-color: #42b883;
+  color: white;
+  border-color: #42b883;
 }
 </style>
